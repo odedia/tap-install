@@ -6,9 +6,9 @@ metadata:
   name: #@ "cnr-{}".format(data.values.ingress.contour_tls_secret)
   namespace: #@ data.values.ingress.contour_tls_namespace
 spec:
-  commonName: #@ "*.cnr.{}".format(data.values.ingress.domain)
+  commonName: #@ "*.apps.{}".format(data.values.ingress.domain)
   dnsNames:
-  - #@ "*.cnr.{}".format(data.values.ingress.domain)
+  - #@ "*.apps.{}".format(data.values.ingress.domain)
   duration: 2160h0m0s
   issuerRef:
     kind: ClusterIssuer

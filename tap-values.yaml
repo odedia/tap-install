@@ -16,12 +16,19 @@ supply_chain: testing_scanning
 ootb_supply_chain_testing_scanning:
   registry:
     server: #@ data.values.container_registry.hostname
-    repository: "tap-wkld"
+    repository: "apps"
+  gitops:
+    ssh_secret: ""
+
+ootb_supply_chain_basic:
+  registry:
+    server: #@ data.values.container_registry.hostname
+    repository: "apps"
   gitops:
     ssh_secret: ""
 
 learningcenter:
-  ingressDomain: #@ "learning-center.{}".format(data.values.ingress.domain)
+  ingressDomain: #@ "workshops.{}".format(data.values.ingress.domain)
   ingressSecret:
     secretName: #@ "learning-center-{}".format(data.values.ingress.contour_tls_secret)
 
@@ -29,16 +36,54 @@ tap_gui:
   ingressEnabled: true
   ingressDomain: #@ data.values.ingress.domain
   service_type: ClusterIP # NodePort for distributions that don't support LoadBalancer
+
   tls:
     secretName: #@ data.values.ingress.contour_tls_secret                                                 
     namespace: #@ data.values.ingress.contour_tls_namespace
   app_config:
-    backend:
-      baseUrl: #@ "https://tap-gui.{}".format(data.values.ingress.domain)
-      cors:
-        origin: #@ "https://tap-gui.{}".format(data.values.ingress.domain)
+    organization:
+      name: odedia
     app:
-      baseUrl: #@ "https://tap-gui.{}".format(data.values.ingress.domain)
+      title: Odedia's portal
+      baseUrl: #@ "https://portal.{}".format(data.values.ingress.domain)
+    integrations:
+      github:
+      - host: github.com
+        token: #@ "{}".format(data.values.backstage.github_token)
+    catalog:
+      locations:
+        - type: url
+          target: https://github.com/odedia/backstage/blob/main/catalog-info.yaml
+        - type: url
+          target: https://github.com/odedia/yelb/blob/main/catalog-info.yaml
+    backend:
+      baseUrl: #@ "https://portal.{}".format(data.values.ingress.domain)
+      cors:
+        origin: #@ "https://portal.{}".format(data.values.ingress.domain)
+    auth:
+      allowGuestAccess: true
+      environment: development
+      session:
+        secret: odedias
+      providers:
+        oidc:
+          development:
+            metadataUrl: #@ "{}".format(data.values.backstage.openid.url)
+            clientId: #@ "{}".format(data.values.backstage.openid.client_id)
+            clientSecret: #@ "{}".format(data.values.backstage.openid.client_secret)
+    techdocs:
+      builder: 'external'
+      generator:
+        runIn: 'docker'
+      publisher:
+        type: 'awsS3'
+        awsS3:
+          bucketName: #@ "{}".format(data.values.backstage.s3.bucket)
+          credentials:
+            accessKeyId: #@ "{}".format(data.values.aws.region)
+            secretAccessKey: #@ "{}".format(data.values.backstage.s3.accessKey)
+          region: #@ "{}".format(data.values.backstage.s3.secretKey)
+          s3ForcePathStyle: false
 
 metadata_store:
   app_service_type: ClusterIP # (optional) Defaults to LoadBalancer. Change to NodePort for distributions that don't support LoadBalancer
@@ -61,7 +106,7 @@ accelerator:
     service_type: ClusterIP
 
 cnrs:
-  domain_name: #@ "cnr.{}".format(data.values.ingress.domain)
+  domain_name: #@ "apps.{}".format(data.values.ingress.domain)
   domain_template: "{{.Name}}-{{.Namespace}}.{{.Domain}}"
   default_tls_secret: #@ "{}/cnr-{}".format(data.values.ingress.contour_tls_namespace,data.values.ingress.contour_tls_secret)
 
