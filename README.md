@@ -25,8 +25,8 @@ It looks like there is an [issue](https://jira.eng.vmware.com/browse/TANZUSC-821
 
 With the following commands, you can provision a cluster with the [gcloud CLI](https://cloud.google.com/sdk/docs/install).
 ```
-CLUSTER_ZONE=europe-west3-a
-gcloud beta container clusters create tap --zone $CLUSTER_ZONE --cluster-version "1.21.5-gke.1302" --machine-type "e2-standard-4" --num-nodes "4" --node-locations $CLUSTER_ZONE --enable-pod-security-policy
+CLUSTER_ZONE=europe-west3
+gcloud beta container clusters create tap --region $CLUSTER_ZONE --cluster-version "latest" --machine-type "e2-standard-4" --num-nodes "4" --enable-pod-security-policy 
 gcloud container clusters get-credentials tap --zone $CLUSTER_ZONE
 ```
 Configure Pod Security Policies so that Tanzu Application Platform controller pods can run as root.
