@@ -38,7 +38,7 @@ tap_gui:
   service_type: ClusterIP # NodePort for distributions that don't support LoadBalancer
 
   tls:
-    secretName: #@ data.values.ingress.contour_tls_secret                                                 
+    secretName: #@ data.values.ingress.contour_tls_secret
     namespace: #@ data.values.ingress.contour_tls_namespace
   app_config:
     organization:
@@ -96,7 +96,7 @@ contour:
       type: LoadBalancer
 
 accelerator: 
-  domain: #@ "accelerator.{}".format(data.values.ingress.domain)                         
+  domain: #@ "{}".format(data.values.ingress.domain)                         
   ingress:
     include: true
   tls:
@@ -113,4 +113,29 @@ cnrs:
 grype:
   namespace: #@ data.values.developer_namespace
   targetImagePullSecret: registry-credentials
+
+# excluded_packages:
+#  - accelerator.apps.tanzu.vmware.com
+#  - api-portal.tanzu.vmware.com
+#  - build.appliveview.tanzu.vmware.com
+#  - buildservice.tanzu.vmware.com
+#  - controller.conventions.apps.tanzu.vmware.com
+#  - developer-conventions.tanzu.vmware.com
+#  - grype.scanning.apps.tanzu.vmware.com
+#  - learningcenter.tanzu.vmware.com
+#  - metadata-store.apps.tanzu.vmware.com
+#  - ootb-supply-chain-basic.tanzu.vmware.com
+#  - ootb-supply-chain-testing.tanzu.vmware.com
+#  - ootb-supply-chain-testing-scanning.tanzu.vmware.com
+#  - ootb-delivery-basic.tanzu.vmware.com
+#  - scanning.apps.tanzu.vmware.com
+#  - spring-boot-conventions.tanzu.vmware.com
+#  - workshops.learningcenter.tanzu.vmware.com
+#  - cnrs.tanzu.vmware.com
+#  - image-policy-webhook.signing.apps.tanzu.vmware.com
+#  - cartographer.tanzu.vmware.com
+#  - tekton.tanzu.vmware.com
+#  - ootb-templates.tanzu.vmware.com
+#  - services-toolkit.tanzu.vmware.com
+#  - service-bindings.labs.vmware.com
 

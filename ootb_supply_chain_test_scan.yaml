@@ -38,7 +38,7 @@ spec:
     - name: registry
       value:
         repository: apps
-        server: harbor.apps.cf.tanzutime.com
+        server: harbor.workshops.tap.tanzutime.com
     templateRef:
       kind: ClusterTemplate
       name: deliverable-template
@@ -65,7 +65,7 @@ spec:
     - name: registry
       value:
         repository: apps
-        server: harbor.apps.cf.tanzutime.com
+        server: harbor.workshops.tap.tanzutime.com
     sources:
     - name: source
       resource: source-scanner
@@ -106,7 +106,7 @@ spec:
     - name: registry
       value:
         repository: apps
-        server: harbor.apps.cf.tanzutime.com
+        server: harbor.workshops.tap.tanzutime.com
     templateRef:
       kind: ClusterTemplate
       name: config-writer-template

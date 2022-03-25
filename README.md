@@ -150,7 +150,7 @@ Run the installation script.
 - You can update installation on updates in your values.yaml via 
     ```
     ytt -f tap-values.yaml -f values.yaml --ignore-unknown-comments > generated/tap-values.yaml
-    tanzu package installed update tap --package-name tap.tanzu.vmware.com --version 1.0.0 --values-file generated/tap-values.yaml -n tap-install
+    tanzu package installed update tap --package-name tap.tanzu.vmware.com --version 1.0.1 --values-file generated/tap-values.yaml -n tap-install
     ```
 - You can get a list of all the installed TAP packages via `tanzu package installed list -n tap-install` or `kubectl get PackageInstall -n tap-install` and have closer look at one of the installed packages via `kubectl describe PackageInstall <package-name> -n tap-install`
 

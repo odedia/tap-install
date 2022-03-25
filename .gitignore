@@ -6,3 +6,4 @@ tanzu/
 .idea
 ### VS Code ###
 .vscode/
+tanzu-cluster-essentials-*
