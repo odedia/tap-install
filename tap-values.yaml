@@ -1,36 +1,56 @@
 #@ load("@ytt:data", "data")
 ---
-profile: full
-ceip_policy_disclosed: true # Installation fails if this is set to 'false'
+shared:
+  ingress_domain: #@ data.values.ingress.domain
+
+  image_registry:
+    project_path: #@ "{}/tap".format(data.values.container_registry.hostname)
+    username: #@ data.values.container_registry.username
+    password: #@ data.values.container_registry.password
+
+  kubernetes_version: "1.23"
+
+  # ca_cert_data: | # To be passed if using custom certificates.
+  #     -----BEGIN CERTIFICATE-----
+  #     MIIFXzCCA0egAwIBAgIJAJYm37SFocjlMA0GCSqGSIb3DQEBDQUAMEY...
+  #     -----END CERTIFICATE-----
+
+ceip_policy_disclosed: true # Installation fails if this is not set to true. Not a string.
+
+#The above keys are minimum numbers of entries needed in tap-values.yaml to get a functioning TAP Full profile installation.
+
+#Below are the keys which may have default values set, but can be overridden.
+
+profile: full # Can take iterate, build, run, view.
+
+supply_chain: basic # Can take testing, testing_scanning.
+
+ootb_supply_chain_testing_scanning: # Based on supply_chain set above, can be changed to ootb_supply_chain_testing, ootb_supply_chain_testing_scanning.
+  registry:
+    server: #@ data.values.container_registry.hostname
+    repository: "apps"
+  gitops:
+    ssh_secret: ""
+
+ootb_supply_chain_basic: # Based on supply_chain set above, can be changed to ootb_supply_chain_testing, ootb_supply_chain_testing_scanning.
+  registry:
+    server: #@ data.values.container_registry.hostname
+    repository: "apps"
+  gitops:
+    ssh_secret: ""
+
+contour:
+  envoy:
+    service:
+      annotations:      
+        external-dns.alpha.kubernetes.io/hostname: #@ "*.{}".format(data.values.ingress.domain)
+      type: LoadBalancer
+
 buildservice:
   kp_default_repository: #@ "{}/tap/build-service".format(data.values.container_registry.hostname)
   kp_default_repository_username: #@ data.values.container_registry.username
   kp_default_repository_password: #@ data.values.container_registry.password
-  tanzunet_username: #@ data.values.tanzunet.username
-  tanzunet_password: #@ data.values.tanzunet.password
-  enable_automatic_dependency_updates: true
-  descriptor_name: tap-1.0.0-full
-
-supply_chain: testing_scanning
-
-ootb_supply_chain_testing_scanning:
-  registry:
-    server: #@ data.values.container_registry.hostname
-    repository: "apps"
-  gitops:
-    ssh_secret: ""
-
-ootb_supply_chain_basic:
-  registry:
-    server: #@ data.values.container_registry.hostname
-    repository: "apps"
-  gitops:
-    ssh_secret: ""
-
-learningcenter:
-  ingressDomain: #@ "workshops.{}".format(data.values.ingress.domain)
-  ingressSecret:
-    secretName: #@ "learning-center-{}".format(data.values.ingress.contour_tls_secret)
+  exclude_dependencies: true
 
 tap_gui:
   ingressEnabled: true
@@ -45,7 +65,7 @@ tap_gui:
       name: odedia
     app:
       title: Odedia's portal
-      baseUrl: #@ "https://portal.{}".format(data.values.ingress.domain)
+      baseUrl: #@ "https://tap-gui.{}".format(data.values.ingress.domain)
     integrations:
       github:
       - host: github.com
@@ -57,9 +77,9 @@ tap_gui:
         - type: url
           target: https://github.com/odedia/yelb/blob/main/catalog-info.yaml
     backend:
-      baseUrl: #@ "https://portal.{}".format(data.values.ingress.domain)
+      baseUrl: #@ "https://tap-gui.{}".format(data.values.ingress.domain)
       cors:
-        origin: #@ "https://portal.{}".format(data.values.ingress.domain)
+        origin: #@ "https://tap-gui.{}".format(data.values.ingress.domain)
     auth:
       allowGuestAccess: true
       environment: development
@@ -86,56 +106,29 @@ tap_gui:
           s3ForcePathStyle: false
 
 metadata_store:
-  app_service_type: ClusterIP # (optional) Defaults to LoadBalancer. Change to NodePort for distributions that don't support LoadBalancer
+  ns_for_export_app_cert: #@ data.values.developer_namespace
+  app_service_type: ClusterIP # Defaults to LoadBalancer. If shared.ingress_domain is set earlier, this must be set to ClusterIP.
 
-contour:
-  envoy:
-    service:
-      annotations:      
-        external-dns.alpha.kubernetes.io/hostname: #@ "*.{}".format(data.values.ingress.domain)
-      type: LoadBalancer
+scanning:
+  metadataStore:
+    url: "" # Configuration is moved, so set this string to empty.
 
-accelerator: 
-  domain: #@ "{}".format(data.values.ingress.domain)                         
-  ingress:
-    include: true
-  tls:
-    secretName: #@ data.values.ingress.contour_tls_secret                                                 
-    namespace: #@ data.values.ingress.contour_tls_namespace
-  server:
-    service_type: ClusterIP
+grype:
+  namespace: #@ data.values.developer_namespace
+  targetImagePullSecret: registry-credentials
+
+policy:
+  tuf_enabled: false # By default, TUF initialization and keyless verification are deactivated.
 
 cnrs:
   domain_name: #@ "apps.{}".format(data.values.ingress.domain)
   domain_template: "{{.Name}}-{{.Namespace}}.{{.Domain}}"
   default_tls_secret: #@ "{}/cnr-{}".format(data.values.ingress.contour_tls_namespace,data.values.ingress.contour_tls_secret)
 
-grype:
-  namespace: #@ data.values.developer_namespace
-  targetImagePullSecret: registry-credentials
 
-# excluded_packages:
-#  - accelerator.apps.tanzu.vmware.com
-#  - api-portal.tanzu.vmware.com
-#  - build.appliveview.tanzu.vmware.com
-#  - buildservice.tanzu.vmware.com
-#  - controller.conventions.apps.tanzu.vmware.com
-#  - developer-conventions.tanzu.vmware.com
-#  - grype.scanning.apps.tanzu.vmware.com
-#  - learningcenter.tanzu.vmware.com
-#  - metadata-store.apps.tanzu.vmware.com
-#  - ootb-supply-chain-basic.tanzu.vmware.com
-#  - ootb-supply-chain-testing.tanzu.vmware.com
-#  - ootb-supply-chain-testing-scanning.tanzu.vmware.com
-#  - ootb-delivery-basic.tanzu.vmware.com
-#  - scanning.apps.tanzu.vmware.com
-#  - spring-boot-conventions.tanzu.vmware.com
-#  - workshops.learningcenter.tanzu.vmware.com
-#  - cnrs.tanzu.vmware.com
-#  - image-policy-webhook.signing.apps.tanzu.vmware.com
-#  - cartographer.tanzu.vmware.com
-#  - tekton.tanzu.vmware.com
-#  - ootb-templates.tanzu.vmware.com
-#  - services-toolkit.tanzu.vmware.com
-#  - service-bindings.labs.vmware.com
-
+excluded_packages:
+  - learningcenter.tanzu.vmware.com
+  - workshops.learningcenter.tanzu.vmware.com
+  - grype.scanning.apps.tanzu.vmware.com
+tap_telemetry:
+  installed_for_vmware_internal_use: "true"

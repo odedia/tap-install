@@ -1,32 +1,38 @@
-#@ load("@ytt:data", "data")
----
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: developer-defined-tekton-pipeline
+  annotations:
   labels:
-    apps.tanzu.vmware.com/pipeline: test     # (!) required
+    apps.tanzu.vmware.com/pipeline: test
+  name: developer-defined-tekton-pipeline
+  namespace: demos
 spec:
   params:
-    - name: source-url                       # (!) required
-    - name: source-revision                  # (!) required
+  - name: source-url
+    type: string
+  - name: source-revision
+    type: string
   tasks:
-    - name: test
+  - name: test
+    params:
+    - name: source-url
+      value: $(params.source-url)
+    - name: source-revision
+      value: $(params.source-revision)
+    taskSpec:
+      metadata: {}
       params:
-        - name: source-url
-          value: $(params.source-url)
-        - name: source-revision
-          value: $(params.source-revision)
-      taskSpec:
-        params:
-          - name: source-url
-          - name: source-revision
-        steps:
-          - name: test
-            image: gradle
-            script: |-
-              cd `mktemp -d`
-
-              wget -qO- $(params.source-url) | tar xvz -m
-              chmod a+x ./mvnw
-              ./mvnw test
+      - name: source-url
+        type: string
+      - name: source-revision
+        type: string
+      spec: null
+      steps:
+      - image: harbor.apps.cf.tanzutime.com/apps/gradle:latest
+        name: test
+        resources: {}
+        script: |-
+          cd `mktemp -d`
+          wget -qO- $(params.source-url) | tar xvz -m
+          chmod a+x ./mvnw
+          ./mvnw test
